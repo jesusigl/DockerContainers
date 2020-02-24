@@ -1,0 +1,65 @@
+version: '2'
+
+services:
+
+  elasticsearch:
+       image: docker.elastic.co/elasticsearch/elasticsearch:7.1.1
+       environment:
+          - "discovery.type=single-node"
+          - "ES_JAVA_OPTS=-Xms256M -Xmx256M"
+          - "xpack.license.self_generated.type=disable"
+       ports:
+          - 9200:9200
+          - 9300:9300
+       user: "elasticsearch"
+       #volumes:
+       #- "c:/docker/elastic/conf/:/usr/share/elasticsearch/config/"
+       #- "c:/docker/elastic/data/:/usr/share/elasticsearch/data/"
+       #- "c:/docker/elastic/logs/:/usr/share/elasticsearch/logs/"
+       command: "/usr/share/elasticsearch/bin/elasticsearch -Ediscovery.type=single-node"
+       networks:
+          - docker-TFM
+
+  kibana:
+       image: docker.elastic.co/kibana/kibana:7.0.1
+       ports:
+          - 5601:5601
+       environment:
+          - "ELASTICSEARCH_HOSTS=http://elasticsearch:9200"
+       networks:
+          - docker-TFM
+       #volumes:
+       # - "c:/docker/kibana/config/:/usr/share/kibana/config/"
+       # - "c:/docker/kibana/data/:/usr/share/kibana/data/"
+       # - "c:/docker/kibana/logs/:/usr/share/kibana/logs/"
+       depends_on:
+          - elasticsearch
+       command:
+          - /usr/share/kibana/bin/kibana
+
+  zookeeper:
+    image: zookeeper
+    expose:
+    - "2181"
+    
+    networks:
+    - docker-TFM
+
+  kafka:
+    image: wurstmeister/kafka
+    depends_on:
+    - zookeeper
+    ports:
+    - "9092:9092"
+    networks:
+    - docker-TFM   
+    environment:
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+
+
+networks:
+  docker-TFM:
+    driver: bridge
+    
