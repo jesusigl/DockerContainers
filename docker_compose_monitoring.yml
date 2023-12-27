@@ -1,0 +1,54 @@
+version: "3.3"
+services:
+  influxdb:
+    container_name: influxdb
+    image: influxdb:latest
+    restart: always
+    volumes:
+      - ./influxdb/data:/var/lib/influxdb2
+    ports:
+      - 8086:8086
+    networks:
+      - monitoring
+
+  jenkins:
+    image: jenkins/jenkins:latest
+    container_name: jenkinsNew
+    restart: always
+    ports:
+      - "50000:50000"
+      - "8080:8080"
+    volumes:
+      - ./jenkins:/var/jenkins_home
+    networks:
+      - monitoring
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    restart: always
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./grafana/data:/var/lib/grafana
+    # Especificar userid del propietario del directorio anterior
+    user: '1000'
+    networks:
+      - monitoring
+
+  jenkins_agent:
+    image: jenkins/ssh-agent:2312
+    container_name: jenkins_agent
+    restart: always
+    ports:
+      - "2222:22"
+    environment:
+      - JENKINS_AGENT_SSH_PUBKEY=ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCk0CpM763iv4v/98OrqLp12nFfW3Z2q71uvNHfzsDtD0aRxuuDnja7+oWX2z/25tRv8vkX4UN/2wKyGDpno7N+YhntYXw6OYEZpsqA5uIzPqszCwvqu0rfN+amkDKNVcr6R2otSd9GfDTELOQROwN7Nx1fRJjmW7zfup96LMeCltzIraPzuQcx7lcddy12QtwQ/y7hG+YD1CAVLy/SvZz32AIoEPYXRdtNF7q/Q1/PeesvXaoMfBdjlHC3jMTkr/a4hb+jsqXJ0GGOwPconUAa4JDGKtEtn73gIQ6jxmZCGKpurmrfba53JgBUOZrFmJTh8c1C7/Bx0/VfDv4Hk7DA8zfMCtth27iuk9MRpTzBvlOXinHJ50hiWVvWM55dcgwjOACHRaOVCpzATBoMak9FahNLsU0MoRYacx/iTJkITdWeI7Fh2MoaFooZqXaf9yzvOT21VtG7/UHJ4WvSOTGu409tPerY3lCB7cxs8KIzsdcNOuOKFQhiM2FqUw4E9H8= jenkins@810f3c9b05ba
+    volumes:
+      - ./jenkins_agent:/tmp
+      - ./jenkins_agent/Informes:/Informes
+    networks:
+      - monitoring
+
+networks:
+  monitoring:
